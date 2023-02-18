@@ -14,7 +14,7 @@ client =gspread.authorize(mycred)
 
 mysheet = client.open("crypto").sheet1
 
-header_format = mysheet.format('A1:J1', {
+header_format = mysheet.format('A1:G1', {
     'backgroundColor': {'red': 0.0, 'green': 0.5, 'blue': 0.5},
     'textFormat': {
         'foregroundColor': {'red': 1.0, 'green': 1.0, 'blue': 1.0},
@@ -43,9 +43,9 @@ def get_open_interest_data(symbol, period):
         return response.json()
     else:
         return None
-# Define a function to fetch the long short ratio data for a given symbol and period
+    
 def get_top_long_short_ratio(symbol,period):
-    url = f'https://www.binance.com/futures/data/topLongShortPositionRatio?symbol={symbol}&period={period}&limit=1'
+    url = f'https://www.binance.com/futures/data/topLongShortPositionRatio?symbol={symbol}&period={period}&limit=2'
     response = session.get(url)
     if response.ok:
         return response.json()
@@ -61,16 +61,16 @@ def process_symbol_data(symbol):
     data_1h = get_open_interest_data(symbol, '1h')
     data_2h = get_open_interest_data(symbol, '2h')
     long_short_data = get_top_long_short_ratio(symbol, '5m')
-    if data_5m and len(data_5m) > 1 and data_15m and len(data_15m) > 1:
+    if data_5m and len(data_5m) > 1 and data_15m and len(data_15m) > 1 and data_30m and len(data_30m) > 1 and data_1h and len(data_1h) > 1 and data_2h and len(data_2h) > 1 and long_short_data and len(long_short_data) > 1:  
         try:
             oi_change_5m = round((float(data_5m[1]['sumOpenInterest']) - float(data_5m[0]['sumOpenInterest'])) / float(data_5m[0]['sumOpenInterest']) * 100, 1)
             oi_change_15m = round((float(data_15m[1]['sumOpenInterest']) - float(data_15m[0]['sumOpenInterest'])) / float(data_15m[0]['sumOpenInterest']) * 100, 1)
             oi_change_30m = round((float(data_30m[1]['sumOpenInterest']) - float(data_30m[0]['sumOpenInterest'])) / float(data_30m[0]['sumOpenInterest']) * 100, 1)
             oi_change_1h = round((float(data_1h[1]['sumOpenInterest']) - float(data_1h[0]['sumOpenInterest'])) / float(data_1h[0]['sumOpenInterest']) * 100, 1)
             oi_change_2h = round((float(data_2h[1]['sumOpenInterest']) - float(data_2h[0]['sumOpenInterest'])) / float(data_2h[0]['sumOpenInterest']) * 100, 1)
-            long_short_ratio = float(long_short_data[0]['longShortRatio'])
-            long_account = float(long_short_data[0]['longAccount'])
-            short_account = float(long_short_data[0]['shortAccount'])
+            long_short_ratio = float(long_short_data[1]['longShortRatio'])
+            long_account = float(long_short_data[1]['longAccount'])
+            short_account = float(long_short_data[1]['shortAccount'])
             row = pd.DataFrame({'symbol': symbol, 'oi_change_5m': oi_change_5m, 'oi_change_15m': oi_change_15m, 'oi_change_30m': oi_change_30m, 'oi_change_1h': oi_change_1h, 'oi_change_2h': oi_change_2h, 'funding': str(round(float(funding) * 100, 5)), 'long_short_ratio': long_short_ratio, 'long_account': long_account, 'short_account': short_account}, index=[0])
             return row
         except Exception as exc:
