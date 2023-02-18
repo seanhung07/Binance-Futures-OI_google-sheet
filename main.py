@@ -22,11 +22,9 @@ header_format = mysheet.format('A1:G1', {
     }
 })
 
-# Create a session object to reuse the underlying TCP connection
-session = requests.Session()
 
 url = 'https://fapi.binance.com/fapi/v1/premiumIndex'
-res = session.get(url)
+res = requests.get(url)
 data=json.loads(res.text)
 df=pd.DataFrame(data)
 df = df.sort_values(by=['lastFundingRate'], ascending=False)
@@ -87,14 +85,11 @@ while True:
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(process_symbol_data, symbol, session) for symbol in symbols]
         results = [future.result() for future in futures if future.result() is not None]
-    session = requests.Session()
-    # Concatenate the results into a single DataFrame
     if results:
         df2 = pd.concat(results, ignore_index=True)
     else:
         df2 = pd.DataFrame()
     df2 = df2.sort_values(by='oi_change_5m', ascending=False)
-    print(df2)
     mysheet.clear()
     sheet_data = df2.values.tolist()
     header = df2.columns.tolist()
@@ -110,4 +105,5 @@ while True:
             cell.value = str(val)
     mysheet.update_cells(cell_list)
     count += 1
-    time.sleep(5)
+    time.sleep(100)
+    session = requests.Session()
