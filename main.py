@@ -100,5 +100,4 @@ while True:
         else:
             cell.value = str(val)
     mysheet.update_cells(cell_list)
-    print(df2)
     time.sleep(30)
