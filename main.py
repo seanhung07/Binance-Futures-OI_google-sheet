@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import concurrent.futures
 import gspread
+from gspread_formatting import *
 from oauth2client.service_account import ServiceAccountCredentials
 import time
 
@@ -31,6 +32,7 @@ df = df.sort_values(by=['lastFundingRate'], ascending=False)
 condition1 = df['symbol'].str.contains("USDT")
 condition2 = df['symbol'].str.len() < 12
 filtered_df = df[condition1 & condition2]
+filtered_df = filtered_df[filtered_df['symbol'] != 'BNXUSDT']
 symbols = filtered_df['symbol'].values
 
 # Define a function to fetch the open interest data for a given symbol and period
@@ -43,7 +45,7 @@ def get_open_interest_data(symbol, period, session):
         return None
     
 def get_top_long_short_ratio(symbol, period , session):
-    url = f'https://www.binance.com/futures/data/topLongShortPositionRatio?symbol={symbol}&period={period}&limit=2'
+    url = f'https://www.binance.com/futures/data/topLongShortAccountRatio?symbol={symbol}&period={period}&limit=2'
     response = session.get(url)
     if response.ok:
         return response.json()
@@ -76,7 +78,7 @@ def process_symbol_data(symbol, session):
     return None
 
 
-# Use a ThreadPoolExecutor to process the symbols in parallel
+
 # Use a ThreadPoolExecutor to process the symbols in parallel
 count = 0
 while True:
