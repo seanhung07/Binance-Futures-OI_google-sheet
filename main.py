@@ -3,7 +3,6 @@ import requests
 import pandas as pd
 import concurrent.futures
 import gspread
-from gspread_formatting import *
 from oauth2client.service_account import ServiceAccountCredentials
 import time
 
