@@ -1,11 +1,15 @@
 import json
 import requests
 import pandas as pd
+import numpy as np
 import concurrent.futures
 import gspread
+from gspread_formatting import *
 from oauth2client.service_account import ServiceAccountCredentials
 import time
+import dconfig
 
+discord = dconfig.url
 myscope = ['https://spreadsheets.google.com/feeds', 
             'https://www.googleapis.com/auth/drive']
 mycred = ServiceAccountCredentials.from_json_keyfile_name('credentials.json',myscope)
@@ -79,6 +83,7 @@ def process_symbol_data(symbol, session):
 
 
 # Use a ThreadPoolExecutor to process the symbols in parallel
+# Use a ThreadPoolExecutor to process the symbols in parallel
 count = 0
 while True:
     if count % 6 == 0:
@@ -105,6 +110,10 @@ while True:
         else:
             cell.value = str(val)
     mysheet.update_cells(cell_list)
+    condition1 = df2['long_short_ratio'] < 1
+    condition2 = df2['funding'].astype(np.float64) != 0.01
+    data = {"content": "=======================\nShort\n"+"\n".join([f'{i+1}. {x}' for i, x in enumerate(df2[condition1 & condition2]['symbol'].values)])+"\n======================="}
+    requests.post(discord, json=data)
     count += 1
     time.sleep(100)
     session = requests.Session()
